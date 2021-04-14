@@ -22,10 +22,53 @@ router.route("/")
 // Your code below this line //
 ///////////////////////////////
 
+router.route("/artists/:id")
+    .get((req, res) => {
+        console.log(`GET /artists/id:${req.params.id}`);
+        Artist.findById(req.params.id)
+            .then(artist => {
+                res.status(200).send(artist)
+            })
+            .catch(err => {
+                res.status(404).send("couldn't find artist")
+            })
+    })
+    // Make this implement
+    .patch((req, res) => {
+        console.log(`PATCH /artists/${req.params.id}`);
+        let name = req.body.name
+        let genres = req.body.genres
+        let spotify_id = req.body.spotify_id
+        let image_url = req.body.image_url
+        Artist.findOneAndUpdate(
+            {_id: req.params.id},
+            {$set: req.body}
+            )
+            .then(artist => {
+                res.status(200).send(null)
+            })
+            .catch(err => {
+                res.status(404).send("couldn't find artist to patch")
+            })
+    })
+    .delete((req, res) => {
+        console.log(`DELETE /artists/${req.params.id}`);
+        Artist.findOneAndDelete({_id: req.params.id})
+        .then (response => {
+            if (response)
+                res.status(200).send(null)
+            else
+                res.status(404).send("couldn't find artist to delete")
+        })
+        .catch(err => {
+            res.status(404).send("couldn't find artist to delete")
+        })
+    });
+
 router.route("/artists")
     .get((_req, res) => {
         // implemented for you:
-        console.log("GET /artists");
+        console.log("GET all /artists");
         Artist.find({})
             .then(artists => {
                 res.status(200).send(artists);
@@ -33,21 +76,16 @@ router.route("/artists")
     })
     .post((req, res) => {
         console.log("POST /doctors");
-        res.status(501).send();
-    });
-
-router.route("/artists/:id")
-    .get((req, res) => {
-        console.log(`GET /artists/${req.params.id}`);
-        res.status(501).send();
-    })
-    .patch((req, res) => {
-        console.log(`PATCH /artists/${req.params.id}`);
-        res.status(501).send();
-    })
-    .delete((req, res) => {
-        console.log(`DELETE /artists/${req.params.id}`);
-        res.status(501).send();
+        console.log("req is: ", req.body);
+        Artist.create({"name": req.body.name, "genres": req.body.genres, "spotify_id": req.body.spotify_id, "image_url": req.body.image_url}).save()
+            .then(artist => {
+                console.log("creating artist")
+                res.status(201).send(artist);
+            })
+            .catch(err => {
+                console.log("invalid artist data supplied")
+                res.status(400).send("bad data for creating artist")
+            })
     });
 
 router.route("/artists/:id/tracks")
@@ -113,13 +151,25 @@ router.route("/search")
          * 
          * Use regular expressions (see Lecture 5 for details)
          */
+        if (req.query.type === 'artist'){
+            Artist.find({name: {$regex: req.query.term, "$options": "i"}})
+            .then(artist => {
+                res.status(200).send(artist)
+            })
+        }
+        if (req.query.type === 'track'){
+            Track.find({name: {$regex: req.query.term, "$options": "i"}})
+            .then(track => {
+                console.log("track is ", track)
+                res.status(200).send(track)
+            })
+        }
 
 
 
 
 
 
-        res.status(501).send();
     })
 
 
